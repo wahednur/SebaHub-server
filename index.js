@@ -4,7 +4,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
-
+const { MongoClient, ServerApiVersion } = require("mongodb");
+const dbUser = process.env.MDB_USER;
+const dbPass = process.env.MDB_PASS;
 const app = express();
 
 //Cors options
@@ -17,6 +19,42 @@ const corsOpt = {
 // Middleware
 app.use(cors(corsOpt));
 app.use(express.json());
+
+// MongoDB Operation start here
+
+const uri = `mongodb+srv://${dbUser}:${dbPass}@cluster0.um8n1zy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    // await client.connect(); // Comment for disabled connection
+    // Send a ping to confirm a successful connection
+    // MongoDB CRUD operation start here
+    //Database collections
+    const serviceCollection = client.db("sebahub").collection("services");
+    // MongoDB CRUD operation end here
+
+    await client.db("admin").command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close(); // Comment for disabled connection
+  }
+}
+run().catch(console.dir);
+
+// MongoDB Operation end here
 
 // Server running test
 app.get("/", (req, res) => {
