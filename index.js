@@ -11,7 +11,7 @@ const app = express();
 
 //Cors options
 const corsOpt = {
-  origin: ["http://localhost:5173/", "http://localhost:5174/"],
+  origin: ["http://localhost:5173", "http://localhost:5174"],
   credential: true,
   optionSuccessStatus: 200,
 };
@@ -43,6 +43,12 @@ async function run() {
     const serviceCollection = client.db("sebahub").collection("services");
     // MongoDB CRUD operation end here
 
+    // Create a service
+    app.post("/services", async (req, res) => {
+      const service = req.body;
+      const result = await serviceCollection.insertOne(service);
+      res.send(result);
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
