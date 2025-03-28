@@ -49,6 +49,12 @@ async function run() {
       const result = await serviceCollection.insertOne(service);
       res.send(result);
     });
+
+    // Get all services
+    app.get("/services", async (req, res) => {
+      const result = await serviceCollection.find().toArray();
+      res.send(result);
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
@@ -64,10 +70,10 @@ run().catch(console.dir);
 
 // Server running test
 app.get("/", (req, res) => {
-  res.send(`<h1>WS jobs server running on port ${port}</h1>`);
+  res.send(`<h1>SebaHub server running on port ${port}</h1>`);
 });
 
 // Port Listening
 app.listen(port, () =>
-  console.log(`WS job server is running on port number ${port}`)
+  console.log(`SebaHub server is running on port number ${port}`)
 );
