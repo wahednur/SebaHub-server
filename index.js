@@ -4,7 +4,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const dbUser = process.env.MDB_USER;
 const dbPass = process.env.MDB_PASS;
 const app = express();
@@ -55,6 +55,33 @@ async function run() {
       const result = await serviceCollection.find().toArray();
       res.send(result);
     });
+    // Get single service{
+    app.get("/service/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await serviceCollection.findOne(query);
+      res.send(result);
+    });
+    // Get all services by email
+    app.get("/services/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { "user.email": email };
+      const result = await serviceCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    //Update a services
+    app.patch("/services/update/:id", async (req, res) => {
+      const id = req.params.id;
+      const status = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: status,
+      };
+      const result = await serviceCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
