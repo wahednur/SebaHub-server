@@ -41,7 +41,10 @@ async function run() {
     // MongoDB CRUD operation start here
     //Database collections
     const serviceCollection = client.db("sebahub").collection("services");
+    const bookingCollection = client.db("sebahub").collection("bookings");
     // MongoDB CRUD operation end here
+
+    // JWT operation start here
 
     // Create a service
     app.post("/services", async (req, res) => {
@@ -79,6 +82,13 @@ async function run() {
         $set: status,
       };
       const result = await serviceCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // Aad a booking
+    app.post("/bookings", async (req, res) => {
+      const newBooking = req.body;
+      const result = await bookingCollection.insertOne(newBooking);
       res.send(result);
     });
 
