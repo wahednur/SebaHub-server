@@ -76,6 +76,12 @@ async function run() {
         .send({ success: true });
     });
 
+    //Clear cookies
+    app.post("/logout", async (req, res) => {
+      res
+        .clearCookie("token", { maxAge: 0, httpOnly: true, secure: false })
+        .send({ success: true });
+    });
     // Create a service
     app.post("/services", async (req, res) => {
       const service = req.body;
