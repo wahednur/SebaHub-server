@@ -8,19 +8,37 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const dbUser = process.env.MDB_USER;
 const dbPass = process.env.MDB_PASS;
 const app = express();
+const jwtSecret = process.env.JWT_SECRET;
 
 //Cors options
 const corsOpt = {
   origin: ["http://localhost:5173", "http://localhost:5174"],
-  credential: true,
+  credentials: true,
   optionSuccessStatus: 200,
 };
 
 // Middleware
 app.use(cors(corsOpt));
 app.use(express.json());
-
+app.use(cookieParser());
 // MongoDB Operation start here
+
+// Verify JWT token
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies.token;
+  // If no token found
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+  // If not valid token
+  jwt.verify(token, jwtSecret, (error, decoded) => {
+    if (error) {
+      return res.status(403).send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
 const uri = `mongodb+srv://${dbUser}:${dbPass}@cluster0.um8n1zy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -45,6 +63,18 @@ async function run() {
     // MongoDB CRUD operation end here
 
     // JWT operation start here
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, jwtSecret, { expiresIn: "1hr" });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
 
     // Create a service
     app.post("/services", async (req, res) => {
@@ -66,9 +96,10 @@ async function run() {
       res.send(result);
     });
     // Get all services by email
-    app.get("/services/:email", async (req, res) => {
+    app.get("/services/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { "user.email": email };
+      console.log("Cookies", req.cookies);
       const result = await serviceCollection.find(query).toArray();
       res.send(result);
     });
