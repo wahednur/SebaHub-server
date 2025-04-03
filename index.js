@@ -35,7 +35,7 @@ const verifyToken = (req, res, next) => {
     if (error) {
       return res.status(403).send({ message: "Forbidden access" });
     }
-    req.decoded = decoded;
+    req.user = decoded;
     next();
   });
 };
@@ -105,7 +105,9 @@ async function run() {
     app.get("/services/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { "user.email": email };
-      console.log("Cookies", req.cookies);
+      if (req.user.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
       const result = await serviceCollection.find(query).toArray();
       res.send(result);
     });
@@ -122,6 +124,13 @@ async function run() {
       res.send(result);
     });
 
+    // Delete a service
+    app.delete("/services/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await serviceCollection.deleteOne(query);
+      res.send(result);
+    });
     // Aad a booking
     app.post("/bookings", async (req, res) => {
       const newBooking = req.body;
