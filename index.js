@@ -138,6 +138,26 @@ async function run() {
       res.send(result);
     });
 
+    // Get all bookings by email of client
+    app.get("/bookings/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      const query = { "client.email": email };
+      if (req.user.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // Deleted a booking by id who booking
+    app.delete("/bookings/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingCollection.deleteOne(query);
+      res.send(result);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
