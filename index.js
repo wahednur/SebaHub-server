@@ -120,7 +120,12 @@ async function run() {
       const updateDoc = {
         $set: status,
       };
-      const result = await serviceCollection.updateOne(filter, updateDoc);
+      const options = { upsert: true };
+      const result = await serviceCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
@@ -157,11 +162,44 @@ async function run() {
       const result = await bookingCollection.deleteOne(query);
       res.send(result);
     });
-
+    // Get all booking request
+    app.get("/bookings-request/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { "host.email": email };
+      if (req.user.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+    //To do booking fetch by id
+    app.get("/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update a booking status
+    app.patch("/update-bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const status = req.body;
+      const updateDoc = {
+        $set: status,
+      };
+      const options = { upsert: true };
+      const result = await bookingCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close(); // Comment for disabled connection
