@@ -200,6 +200,19 @@ async function run() {
       );
       res.send(result);
     });
+
+    // search service by name
+    app.get("/search", async (req, res) => {
+      let query = {};
+      const searchData = req.query.search;
+      if (searchData) {
+        query = {
+          $or: [{ title: { $regex: searchData, $options: "i" } }],
+        };
+      }
+      const result = await serviceCollection.find(query).toArray();
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close(); // Comment for disabled connection
